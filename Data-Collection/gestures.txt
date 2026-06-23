@@ -1,0 +1,20 @@
+Gestures:
+
+Back - <-
+
+Forward - ->
+
+Refresh - O
+
+Open Tab:
+    - Blank - +
+    - Youtube - Y
+    - Gmail - M
+    - Wordle - W
+    - Google? - G
+
+Close Tab - -
+
+Close Window/End Session - X
+
+Take Screenshot - Rectangle
