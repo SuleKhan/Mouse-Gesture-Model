@@ -1,5 +1,5 @@
 from PIL import Image, ImageDraw
-from pynput import mouse
+from pynput import mouse, keyboard
 
 import json
 import torch
@@ -16,6 +16,11 @@ MODEL_PATH = "Model-Training/gesture_cnn_val_9598.pt"      # your .pt file
 CLASSES_PATH = "Model-Training/gesture_classes.json"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+print("Using device:", DEVICE)
+
+if DEVICE == "cuda":
+    print("GPU name:", torch.cuda.get_device_name(0))
 
 # -----------------------
 # Same crop function
@@ -130,58 +135,63 @@ model.eval()
 # Listen for mouse gestures
 # -----------------------
 
-isRecording = False
+recording = False
 isActive = True
 
 def on_move(x, y, injected):
-    # print('Pointer moved to {}; it was {}'.format(
-    #     (x, y), 'faked' if injected else 'not faked'))
-    global isActive
+    global recording, isActive
+
     if x > 1900 and y < 30:
-        # Stop listener
         isActive = False
         return False
-    if isRecording and (x, y) not in mousePath:
+
+    if recording and (x, y) not in mousePath:
         mousePath.append((x, y))
 
-def on_click(x, y, button, pressed, injected):
-    global isRecording
-    # print('{} {} at {}; it was {}'.format(
-    #     button,
-    #     'Pressed' if pressed else 'Released',
-    #     (x, y), 'faked' if injected else 'not faked'))
-    if button == mouse.Button.x2 and pressed:
-        isRecording = True
-    elif button == mouse.Button.x2 and not pressed:
-        isRecording = False
-        return False  # Stop listener
 
-def on_scroll(x, y, dx, dy, injected):
-    # print('Scrolled {} at {}; it was {}'.format(
-    #     'down' if dy < 0 else 'up',
-    #     (x, y), 'faked' if injected else 'not faked'))
-    pass
+def on_press(key):
+    global recording, isActive
+
+    if key == keyboard.Key.esc:
+        isActive = False
+        return False  # Stop the keyboard listener
+
+    if key == keyboard.Key.ctrl_l:
+        recording = True
+        print("Started recording")
+
+def on_release(key):
+    global recording
+
+    if key == keyboard.Key.ctrl_l:
+        recording = False
+        print("Stopped recording")
+        return False  # Stop the keyboard listener
 
 while isActive:
     mousePath = []
 
-    print(f"Waiting for Gesture")
-    with mouse.Listener(
-            on_move=on_move,
-            on_click=on_click,
-            on_scroll=on_scroll) as listener:
-        listener.join()
-    print(f"Gesture recorded.")
+    print("Hold Left Ctrl and draw a gesture...")
+
+    with keyboard.Listener(
+        on_press=on_press,
+        on_release=on_release
+    ) as listener:
+        with mouse.Listener(
+            on_move=on_move
+        ) as mouse_listener:
+            listener.join()
+            mouse_listener.stop()
+
+    print("Gesture recorded.")
 
     if mousePath:
-        # create blank image
         img = Image.new("RGB", (1920, 1080), "white")
         draw = ImageDraw.Draw(img)
 
-        # draw lines between points
         draw.line(mousePath, fill="black", width=3)
 
-        img.save(f"Mouse-Gesture-Tool/gesture.png")
+        img.save("Mouse-Gesture-Tool/gesture.png")
 
         # Load the image and apply the transform
         img = transform(img)
