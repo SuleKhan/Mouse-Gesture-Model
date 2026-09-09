@@ -134,11 +134,11 @@ The training script also displays loss and accuracy plots after training.
 ## Notes
 
 - The live tool and the training pipeline use slightly different image
-  preprocessing. A model should be evaluated with the same kind of input it
+  preprocessing based on decisions made during development in attempts to improve accuracy of the model. Ideally, a model should be evaluated with the same kind of input it
   was trained on.
 - The included `.pt` checkpoint and gesture dataset are provided for
   experimentation; recognition quality depends on the similarity between
-  training and live gestures.
+  training and live gestures. For example the model was trained on how I draw the gestures and may have learnt some of my nuances.
 - `gestures.txt` records the intended browser actions and shortcuts, but the
   current live tool only performs classification and prints the result. It does
   not automatically execute those shortcuts.
